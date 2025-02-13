@@ -13,12 +13,14 @@ class MainWindow(QMainWindow):
         self.initUI()
         self.api_server = 'https://static-maps.yandex.ru/1.x/'
         self.map_zoom = 15
-        self.delta = .1
+        self.delta = .005
         self.map_ll = [37.621601, 55.753460]
         self.map_l = 'map'
         self.refresh_map()
 
     def initUI(self):
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
         self.setWindowTitle("Большая карта")
         self.setGeometry(100, 100, 800, 600)
 
@@ -61,10 +63,21 @@ class MainWindow(QMainWindow):
         self.map_label.setPixmap(self.pixmap)
 
     def keyPressEvent(self, event):
-        if (event.key() == Qt.Key.Key_PageUp or event.key() == Qt.Key.Key_Up) and self.map_zoom < 21:
+        self.setFocus()
+        if event.key() == Qt.Key.Key_BracketRight and self.map_zoom < 21:
             self.map_zoom += 1
-        elif (event.key() == Qt.Key.Key_PageDown or event.key() == Qt.Key.Key_Down) and self.map_zoom > 0:
+        elif event.key() == Qt.Key.Key_BracketLeft and self.map_zoom > 0:
             self.map_zoom -= 1
+        
+        elif event.key() == Qt.Key.Key_Left:
+            self.map_ll[0] -= self.delta
+        elif event.key() == Qt.Key.Key_Right:
+            self.map_ll[0] += self.delta
+        elif event.key() == Qt.Key.Key_Up:
+            self.map_ll[1] += self.delta    
+        elif event.key() == Qt.Key.Key_Down:
+            self.map_ll[1] -= self.delta
+
         self.refresh_map()
             
 
