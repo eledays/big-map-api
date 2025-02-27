@@ -20,13 +20,15 @@ class MainWindow(QMainWindow):
         self.static_api_key = 'f3a0fe3a-b07e-4840-a1da-06f18b2ddf13'
         self.geocoder_api_key = '8013b162-6b42-4997-9691-77b7074026e0'
         self.pt = None
+        self.address = ''
+        self.postal_code = ''
         self.refresh_map()
 
     def initUI(self):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.setWindowTitle("Большая карта")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 840, 600)
 
         self.line_edit = QLineEdit(self)
         self.line_edit.setGeometry(50, 10, 300, 30)
@@ -40,7 +42,7 @@ class MainWindow(QMainWindow):
         self.search_button.clicked.connect(self.clear_location)
 
         self.theme_button = QPushButton("Сменить тему", self)
-        self.theme_button.setGeometry(680, 170, 100, 30)
+        self.theme_button.setGeometry(680, 170, 140, 30)
         self.theme_button.clicked.connect(self.toggle_theme)
         
         self.is_dark_theme = False
@@ -50,6 +52,12 @@ class MainWindow(QMainWindow):
 
         self.address_label = QLabel(self)
         self.address_label.setGeometry(50, 460, 600, 30)
+
+        self.toggle_postal_code_button = QPushButton("Почтовый индекс", self)
+        self.toggle_postal_code_button.setGeometry(680, 210, 140, 30)
+        self.toggle_postal_code_button.clicked.connect(self.toggle_postal_code)
+
+        self.is_postal_code_enabled = False
         
     def refresh_map(self):
         map_params = {
@@ -73,6 +81,11 @@ class MainWindow(QMainWindow):
 
         self.pixmap = QPixmap(self.map_file)
         self.map_label.setPixmap(self.pixmap)
+
+        address = self.address
+        if self.is_postal_code_enabled:
+            address += ' ' + self.postal_code
+        self.address_label.setText(address)
 
     def keyPressEvent(self, event):
         self.setFocus()
@@ -145,11 +158,9 @@ class MainWindow(QMainWindow):
             return
             
         point_str = features[0]["GeoObject"]["Point"]["pos"]
-        address = features[0]["GeoObject"]["description"]
-        print(point_str)
+        self.address = features[0]["GeoObject"]["metaDataProperty"]["GeocoderMetaData"]["text"]
+        self.postal_code = features[0]["GeoObject"]['metaDataProperty']['GeocoderMetaData']['Address']['postal_code']
         self.map_ll = list(map(float, point_str.split()))
-
-        self.address_label.setText(address)
         
         self.pt=f'{self.map_ll[0]},{self.map_ll[1]}'
         self.refresh_map()
@@ -160,6 +171,10 @@ class MainWindow(QMainWindow):
         self.pt = None
         self.refresh_map()
 
+    def toggle_postal_code(self):
+        self.is_postal_code_enabled = not self.is_postal_code_enabled
+        self.refresh_map()
+        
 
 if __name__ == '__main__':
     app = QApplication([])
