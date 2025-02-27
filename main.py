@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
         self.map_l = 'map'
         self.static_api_key = 'f3a0fe3a-b07e-4840-a1da-06f18b2ddf13'
         self.geocoder_api_key = '8013b162-6b42-4997-9691-77b7074026e0'
+        self.pt = None
         self.refresh_map()
 
     def initUI(self):
@@ -43,14 +44,14 @@ class MainWindow(QMainWindow):
         self.map_label = QLabel(self)
         self.map_label.setGeometry(50, 50, 600, 400)
         
-    def refresh_map(self, pt=None):
+    def refresh_map(self):
         map_params = {
             "ll": ",".join(map(str, self.map_ll)),
             "l": self.map_l,
             "z": self.map_zoom,
             'theme': 'dark' if self.is_dark_theme else 'light',
             'apikey': self.static_api_key,
-            'pt': pt
+            'pt': self.pt
         }
         response = requests.get(self.static_api_server, params=map_params)
 
@@ -140,7 +141,8 @@ class MainWindow(QMainWindow):
         print(point_str)
         self.map_ll = list(map(float, point_str.split()))
         
-        self.refresh_map(pt=f'{self.map_ll[0]},{self.map_ll[1]}')
+        self.pt=f'{self.map_ll[0]},{self.map_ll[1]}'
+        self.refresh_map()
 
 if __name__ == '__main__':
     app = QApplication([])
