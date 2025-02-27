@@ -35,6 +35,10 @@ class MainWindow(QMainWindow):
         self.search_button.setGeometry(360, 10, 100, 30)
         self.search_button.clicked.connect(self.search_location)
 
+        self.search_button = QPushButton("Сбросить", self)
+        self.search_button.setGeometry(470, 10, 100, 30)
+        self.search_button.clicked.connect(self.clear_location)
+
         self.theme_button = QPushButton("Сменить тему", self)
         self.theme_button.setGeometry(680, 170, 100, 30)
         self.theme_button.clicked.connect(self.toggle_theme)
@@ -143,6 +147,12 @@ class MainWindow(QMainWindow):
         
         self.pt=f'{self.map_ll[0]},{self.map_ll[1]}'
         self.refresh_map()
+
+    def clear_location(self):
+        self.line_edit.clear()
+        self.pt = None
+        self.refresh_map()
+
 
 if __name__ == '__main__':
     app = QApplication([])
