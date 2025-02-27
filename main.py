@@ -11,12 +11,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.api_server = 'https://static-maps.yandex.ru/1.x/'
+        self.static_api_server = 'https://static-maps.yandex.ru/1.x/'
+        self.geocoder_api_server = 'https://geocode-maps.yandex.ru/1.x/'
         self.map_zoom = 15
         self.delta = .005
         self.map_ll = [37.621601, 55.753460]
         self.map_l = 'map'
-        self.api_key = 'f3a0fe3a-b07e-4840-a1da-06f18b2ddf13'
+        self.static_api_key = 'f3a0fe3a-b07e-4840-a1da-06f18b2ddf13'
+        self.geocoder_api_key = '8013b162-6b42-4997-9691-77b7074026e0'
         self.refresh_map()
 
     def initUI(self):
@@ -30,18 +32,7 @@ class MainWindow(QMainWindow):
 
         self.search_button = QPushButton("Искать", self)
         self.search_button.setGeometry(360, 10, 100, 30)
-
-        self.scheme_button = QPushButton("Схема", self)
-        self.scheme_button.setGeometry(680, 50, 100, 30)
-        self.scheme_button.clicked.connect(self.set_scheme_map)
-
-        self.satellite_button = QPushButton("Спутник", self)
-        self.satellite_button.setGeometry(680, 90, 100, 30)
-        self.satellite_button.clicked.connect(self.set_satellite_map)
-
-        self.hybrid_button = QPushButton("Гибрид", self)
-        self.hybrid_button.setGeometry(680, 130, 100, 30)
-        self.hybrid_button.clicked.connect(self.set_hybrid_map)
+        self.search_button.clicked.connect(self.search_location)
 
         self.theme_button = QPushButton("Сменить тему", self)
         self.theme_button.setGeometry(680, 170, 100, 30)
@@ -52,15 +43,16 @@ class MainWindow(QMainWindow):
         self.map_label = QLabel(self)
         self.map_label.setGeometry(50, 50, 600, 400)
         
-    def refresh_map(self):
+    def refresh_map(self, pt=None):
         map_params = {
             "ll": ",".join(map(str, self.map_ll)),
             "l": self.map_l,
             "z": self.map_zoom,
             'theme': 'dark' if self.is_dark_theme else 'light',
-            'apikey': self.api_key
+            'apikey': self.static_api_key,
+            'pt': pt
         }
-        response = requests.get(self.api_server, params=map_params)
+        response = requests.get(self.static_api_server, params=map_params)
 
         if not response:
             print("Ошибка выполнения запроса:")
@@ -100,7 +92,7 @@ class MainWindow(QMainWindow):
                     background-color: #333333;
                 }
                 QPushButton {
-                    background-color: #444444;
+                    background-color: #444444;  
                     color: white;
                     border: 1px solid #555555;
                     padding: 5px;
@@ -119,17 +111,36 @@ class MainWindow(QMainWindow):
             self.setStyleSheet("") 
         self.refresh_map()
 
-    def set_scheme_map(self):
-        self.map_l = 'map'
-        self.refresh_map()
-
-    def set_satellite_map(self):
-        self.map_l = 'sat'
-        self.refresh_map()
-
-    def set_hybrid_map(self):
-        self.map_l = 'sat,skl'
-        self.refresh_map()
+    def search_location(self):
+        search_query = self.line_edit.text()
+        if not search_query:
+            return
+            
+        geocoder_params = {
+            "apikey": self.geocoder_api_key,
+            "geocode": search_query,
+            "format": "json"
+        }
+        
+        response = requests.get(self.geocoder_api_server, params=geocoder_params)
+        
+        if not response:
+            print("Ошибка выполнения запроса:")
+            print('http code:', response.status_code, f'({response.reason}), {response.url}')
+            return
+            
+        json_response = response.json()
+        
+        features = json_response["response"]["GeoObjectCollection"]["featureMember"]
+        if not features:
+            print("Ничего не найдено")
+            return
+            
+        point_str = features[0]["GeoObject"]["Point"]["pos"]
+        print(point_str)
+        self.map_ll = list(map(float, point_str.split()))
+        
+        self.refresh_map(pt=f'{self.map_ll[0]},{self.map_ll[1]}')
 
 if __name__ == '__main__':
     app = QApplication([])
