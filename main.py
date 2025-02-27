@@ -47,6 +47,9 @@ class MainWindow(QMainWindow):
 
         self.map_label = QLabel(self)
         self.map_label.setGeometry(50, 50, 600, 400)
+
+        self.address_label = QLabel(self)
+        self.address_label.setGeometry(50, 460, 600, 30)
         
     def refresh_map(self):
         map_params = {
@@ -142,13 +145,17 @@ class MainWindow(QMainWindow):
             return
             
         point_str = features[0]["GeoObject"]["Point"]["pos"]
+        address = features[0]["GeoObject"]["description"]
         print(point_str)
         self.map_ll = list(map(float, point_str.split()))
+
+        self.address_label.setText(address)
         
         self.pt=f'{self.map_ll[0]},{self.map_ll[1]}'
         self.refresh_map()
 
     def clear_location(self):
+        self.address_label.clear()
         self.line_edit.clear()
         self.pt = None
         self.refresh_map()
